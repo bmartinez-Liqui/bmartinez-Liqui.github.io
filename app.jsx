@@ -59,7 +59,6 @@ const App = () => {
     const [projects, setProjects] = useState([]);
     const [groups, setGroups] = useState(["General", "Operaciones", "Contabilidad", "TI", "Comercial", "Tesorería"]);
     
-    // PERFIL FIJO LOCAL (No editable)
     const profile = { 
         name: "Breiner Martinez", 
         title: "Analista de Datos Jr", 
@@ -253,7 +252,7 @@ const App = () => {
 
     const handleFileUpload = (e) => {
         const files = Array.from(e.target.files);
-        const MAX_SIZE = 25 * 1024 * 1024; // 25MB Límite
+        const MAX_SIZE = 25 * 1024 * 1024; // 25MB
         
         files.forEach(file => {
             if (file.size > MAX_SIZE) {
@@ -404,7 +403,7 @@ const App = () => {
         const limits = currentProject.status === 'pendiente' ? {min:0, max:30} : currentProject.status === 'en-progreso' ? {min:31, max:90} : {min:91, max:100};
 
         return (
-            <div className="fade-in space-y-6 text-left">
+            <div className="fade-in space-y-6 text-left text-sharp">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
                     <button onClick={() => {setView('projects'); setSelectedProjectId(null);}} className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-violet-600 transition-all text-left">
                         <LucideIcon name="arrow-left" size={14}/> Volver a proyectos
@@ -509,7 +508,7 @@ const App = () => {
                             <div className="flex justify-between items-center mb-6 text-left">
                                 <h3 className="text-base md:text-lg font-bold flex items-center gap-3 text-slate-800 text-left"><LucideIcon name="image" className="text-violet-500"/> Galería</h3>
                                 <button onClick={() => fileInputRef.current.click()} className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-violet-600 hover:text-white transition-all no-print shadow-sm"><LucideIcon name="plus" size={16}/></button>
-                                <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} multiple accept="image/*, video/*, application/pdf, .doc,.docx,.xls,.xlsx" />
+                                <input type="file" min="1" max="25" ref={fileInputRef} className="hidden" onChange={handleFileUpload} multiple accept="image/*, video/*, application/pdf, .doc,.docx,.xls,.xlsx" />
                             </div>
                             
                             {currentProject.files?.length > 0 ? (
@@ -661,7 +660,6 @@ const App = () => {
                         <span className="text-sm md:text-lg font-bold text-left tracking-tight truncate">Liquitech / <span className="text-violet-600 text-left">Repo</span></span>
                     </div>
                     
-                    {/* MENÚ DE ESCRITORIO (Oculto en móviles) */}
                     <div className="hidden md:flex gap-8 text-[11px] font-bold text-slate-400 uppercase tracking-[2px] text-left">
                         <button onClick={() => {setView('dashboard');}} className={view === 'dashboard' ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Dashboard</button>
                         <button onClick={() => {setView('projects');}} className={(view === 'projects' || view === 'project-detail') ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Proyectos</button>
@@ -717,7 +715,9 @@ const App = () => {
                                 <div key={p.id} onClick={() => {setSelectedProjectId(p.id); setView('project-detail')}} className="card-pro p-6 md:p-8 cursor-pointer group flex flex-col h-full text-left text-sharp">
                                     <div className="flex justify-between items-start mb-6 md:mb-8 text-left text-sharp"><span className={`px-3 py-1 md:px-4 md:py-1.5 rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-bold uppercase shadow-sm ${p.status === 'completado' ? 'status-badge-completado' : p.status === 'en-progreso' ? 'status-badge-en-progreso' : 'status-badge-pendiente'}`}>{p.status.replace('-', ' ')}</span><button onClick={(e) => {e.stopPropagation(); if(confirm('¿Eliminar?')) setProjects(projects.filter(x => x.id !== p.id))}} className="text-slate-200 hover:text-red-500 transition-all transform hover:scale-110 text-left text-sharp"><LucideIcon name="trash-2" size={16}/></button></div>
                                     <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-3 group-hover:text-violet-600 transition-colors leading-tight text-left text-sharp">{p.title}</h3>
-                                    <p className="text-slate-400 text-xs md:text-sm line-clamp-3 h-12 md:h-15 mb-6 md:mb-8 font-medium leading-relaxed text-left text-sharp">{p.description}</p>
+                                    
+                                    <p className="text-slate-400 text-xs md:text-sm line-clamp-3 mb-6 md:mb-8 font-medium leading-relaxed text-left text-sharp">{p.description}</p>
+                                    
                                     <div className="mt-auto flex items-center justify-between pt-4 md:pt-6 border-t border-slate-50 text-left text-sharp"><div className="text-violet-600 font-black italic text-lg md:text-xl text-left">{p.progress}%</div><div className="flex items-center gap-1 md:gap-2 text-left"><LucideIcon name="paperclip" size={12} className="text-slate-300"/><span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest text-left">{(p.files || []).length} archivos</span></div></div>
                                     <div className="h-1.5 md:h-2 bg-slate-50 rounded-full mt-3 md:mt-4 overflow-hidden text-left text-sharp"><div className="h-full bg-violet-600 rounded-full transition-all duration-500 text-left" style={{ width: `${p.progress}%` }}></div></div>
                                 </div>
@@ -731,7 +731,6 @@ const App = () => {
                 {view === 'config' && renderConfigPanel()}
             </main>
 
-            {/* MENÚ DE NAVEGACIÓN INFERIOR (Solo visible en móviles) */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-100 flex justify-around items-center p-3 z-50 pb-safe shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
                 <button onClick={() => {setView('dashboard');}} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${view === 'dashboard' ? 'text-violet-600 bg-violet-50' : 'text-slate-400'}`}>
                     <LucideIcon name="layout-dashboard" size={20} />
@@ -751,11 +750,10 @@ const App = () => {
                 </button>
             </div>
 
-            {/* Modal Crear/Editar Proyecto */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[300] flex items-center justify-center p-4 sm:p-6 text-left">
                     <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden flex flex-col text-left h-auto max-h-[90vh]">
-                        <div className="p-6 md:p-8 border-b flex justify-between items-center bg-white text-left text-sharp text-left shrink-0"><h3 className="text-xl md:text-2xl font-black uppercase text-slate-800 tracking-tighter text-left">{editId ? 'Editar' : 'Nueva'} <span className="text-violet-600 text-left">Solución</span></h3><button onClick={() => setIsModalOpen(false)} className="hover:text-red-500 transition-colors text-left"><LucideIcon name="x" size={24}/></button></div>
+                        <div className="p-6 md:p-8 border-b flex justify-between items-center bg-white text-left text-sharp shrink-0"><h3 className="text-xl md:text-2xl font-black uppercase text-slate-800 tracking-tighter text-left">{editId ? 'Editar' : 'Nueva'} <span className="text-violet-600 text-left">Solución</span></h3><button onClick={() => setIsModalOpen(false)} className="hover:text-red-500 transition-colors text-left"><LucideIcon name="x" size={24}/></button></div>
                         <form onSubmit={handleSaveProject} className="p-6 md:p-8 space-y-4 md:space-y-6 overflow-y-auto custom-scrollbar text-left text-sharp flex-1">
                             <div className="space-y-2 text-left text-sharp"><label className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 md:ml-2 text-left">Título</label><input required name="title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-4 md:p-5 bg-slate-50 rounded-xl md:rounded-2xl border-none outline-none font-bold text-base md:text-lg focus:ring-4 focus:ring-violet-50 text-left text-sharp" placeholder="Ej: Automatización Conciliación" /></div>
                             <div className="space-y-2 text-left text-sharp"><label className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 md:ml-2 text-left">Descripción</label><textarea required name="description" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-4 md:p-5 bg-slate-50 rounded-xl md:rounded-2xl outline-none border-none h-24 md:h-32 font-medium text-sm focus:ring-4 focus:ring-violet-50 text-left text-sharp" placeholder="Detalla el impacto..." /></div>
@@ -784,21 +782,19 @@ const App = () => {
                 </div>
             )}
 
-            {/* Modal Código HTML */}
             {isCodeModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[400] flex items-center justify-center p-4">
                     <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl w-full max-w-3xl overflow-hidden fade-in flex flex-col text-left">
-                        <div className="p-6 md:p-10 border-b-2 border-slate-50 flex justify-between items-center bg-white text-left text-sharp text-sharp text-sharp text-sharp"><div className="flex flex-col text-left text-sharp"><h3 className="text-xl md:text-3xl font-black text-slate-900 uppercase text-left text-sharp">Nueva <span className="text-violet-600 not-italic text-left text-sharp">Versión</span></h3><span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase mt-1 md:mt-2 tracking-widest text-left text-sharp">Motor ejecutable (HTML)</span></div><button onClick={() => setIsCodeModalOpen(false)} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 flex items-center justify-center border border-slate-100 transition-all text-left text-sharp text-sharp text-sharp"><LucideIcon name="x" size={20}/></button></div>
-                        <form onSubmit={handleAddCode} className="p-6 md:p-10 space-y-6 md:space-y-10 text-left text-sharp text-sharp text-sharp">
-                            <div className="space-y-3 md:space-y-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp"><label className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 italic leading-none text-left text-sharp text-sharp">Nombre de la herramienta</label><input required value={codeData.name} onChange={e => setCodeData({...codeData, name: e.target.value})} type="text" className="w-full px-5 md:px-8 py-4 md:py-6 rounded-xl md:rounded-3xl bg-slate-50 border-none outline-none font-bold text-slate-800 focus:ring-4 md:focus:ring-8 focus:ring-violet-500/10 text-sm md:text-lg shadow-inner text-left text-sharp" placeholder="Ej: Calculadora de Datos" /></div>
-                            <div className="space-y-3 md:space-y-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><div className="flex justify-between items-center px-1 md:px-2 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><label className="text-[10px] md:text-[11px] font-bold text-violet-600 uppercase tracking-widest text-left text-sharp text-sharp text-sharp">Código fuente (HTML)</label><span className="text-[8px] md:text-[9px] text-slate-400 bg-slate-50 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold uppercase border border-slate-100 text-sharp text-sharp text-sharp text-sharp text-left">Visor Independiente</span></div><textarea required value={codeData.html} onChange={e => setCodeData({...codeData, html: e.target.value})} className="w-full px-5 md:px-8 py-5 md:py-8 rounded-[1.5rem] md:rounded-[3rem] bg-slate-900 border-none outline-none text-emerald-400 font-mono text-[10px] md:text-xs leading-loose shadow-2xl custom-scrollbar text-left text-sharp text-sharp text-sharp text-sharp" rows="8" placeholder="Pega el código HTML completo aquí..."></textarea></div>
-                            <div className="flex flex-col sm:flex-row justify-end gap-4 md:gap-6 pt-2 md:pt-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><button type="button" onClick={() => setIsCodeModalOpen(false)} className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-800 transition-all italic font-poppins text-left text-sharp py-3">Cancelar</button><button type="submit" className="bg-violet-600 text-white px-8 md:px-12 py-4 md:py-5 rounded-xl md:rounded-full font-bold text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-violet-700 shadow-xl md:shadow-2xl active:scale-95 transition-all text-left text-sharp">Guardar herramienta</button></div>
+                        <div className="p-6 md:p-10 border-b-2 border-slate-50 flex justify-between items-center bg-white text-left text-sharp"><div className="flex flex-col text-left text-sharp"><h3 className="text-xl md:text-3xl font-black text-slate-900 uppercase text-left text-sharp">Nueva <span className="text-violet-600 not-italic text-left text-sharp">Versión</span></h3><span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase mt-1 md:mt-2 tracking-widest text-left text-sharp">Motor ejecutable (HTML)</span></div><button onClick={() => setIsCodeModalOpen(false)} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 flex items-center justify-center border border-slate-100 transition-all text-left text-sharp"><LucideIcon name="x" size={20}/></button></div>
+                        <form onSubmit={handleAddCode} className="p-6 md:p-10 space-y-6 md:space-y-10 text-left text-sharp">
+                            <div className="space-y-3 md:space-y-4 text-left text-sharp"><label className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 italic leading-none text-left text-sharp">Nombre de la herramienta</label><input required value={codeData.name} onChange={e => setCodeData({...codeData, name: e.target.value})} type="text" className="w-full px-5 md:px-8 py-4 md:py-6 rounded-xl md:rounded-3xl bg-slate-50 border-none outline-none font-bold text-slate-800 focus:ring-4 md:focus:ring-8 focus:ring-violet-500/10 text-sm md:text-lg shadow-inner text-left text-sharp" placeholder="Ej: Calculadora de Datos" /></div>
+                            <div className="space-y-3 md:space-y-4 text-left text-sharp"><div className="flex justify-between items-center px-1 md:px-2 text-left text-sharp"><label className="text-[10px] md:text-[11px] font-bold text-violet-600 uppercase tracking-widest text-left text-sharp">Código fuente (HTML)</label><span className="text-[8px] md:text-[9px] text-slate-400 bg-slate-50 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold uppercase border border-slate-100 text-sharp text-left">Visor Independiente</span></div><textarea required value={codeData.html} onChange={e => setCodeData({...codeData, html: e.target.value})} className="w-full px-5 md:px-8 py-5 md:py-8 rounded-[1.5rem] md:rounded-[3rem] bg-slate-900 border-none outline-none text-emerald-400 font-mono text-[10px] md:text-xs leading-loose shadow-2xl custom-scrollbar text-left text-sharp" rows="8" placeholder="Pega el código HTML completo aquí..."></textarea></div>
+                            <div className="flex flex-col sm:flex-row justify-end gap-4 md:gap-6 pt-2 md:pt-4 text-left text-sharp"><button type="button" onClick={() => setIsCodeModalOpen(false)} className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-800 transition-all italic font-poppins text-left text-sharp py-3">Cancelar</button><button type="submit" className="bg-violet-600 text-white px-8 md:px-12 py-4 md:py-5 rounded-xl md:rounded-full font-bold text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-violet-700 shadow-xl md:shadow-2xl active:scale-95 transition-all text-left text-sharp">Guardar herramienta</button></div>
                         </form>
                     </div>
                 </div>
             )}
 
-            {/* Modal Visor de Medios (Imágenes y Videos) */}
             {viewingMedia && (
                 <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[500] flex items-center justify-center p-4 fade-in">
                     <button onClick={() => setViewingMedia(null)} className="absolute top-4 right-4 md:top-6 md:right-6 text-white/50 hover:text-white transition-colors bg-black/20 p-2 rounded-full">
