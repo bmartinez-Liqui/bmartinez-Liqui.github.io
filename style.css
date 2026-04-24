@@ -39,6 +39,7 @@ body {
 
 input[type="range"].dynamic-slider {
     -webkit-appearance: none;
+    appearance: none;
     width: 100%;
     height: 8px;
     border-radius: 10px;
@@ -49,6 +50,7 @@ input[type="range"].dynamic-slider {
 
 input[type="range"].dynamic-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
     appearance: none;
     width: 18px;
     height: 18px;
@@ -129,7 +131,5 @@ input[type="range"].dynamic-slider::-webkit-slider-thumb {
 
 .app-container { max-width: 1200px; margin: 0 auto; width: 100%; padding: 0 1.25rem; }
 
-/* AJUSTE PARA MÓVILES - PROTEGE EL MENÚ INFERIOR EN IPHONES/ANDROID */
-.pb-safe {
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-}
+/* AJUSTE PARA MÓVILES - PROTEGE EL MENÚ INFERIOR */
+.pb-safe { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }

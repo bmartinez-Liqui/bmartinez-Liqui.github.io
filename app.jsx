@@ -41,9 +41,7 @@ const StatCard = ({ title, value, icon, color }) => {
 const App = () => {
     const [view, setView] = useState('dashboard');
     const [selectedProjectId, setSelectedProjectId] = useState(null);
-    
     const [editId, setEditId] = useState(null);
-    
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
     const [isGanttOpen, setIsGanttOpen] = useState(false);
@@ -58,41 +56,30 @@ const App = () => {
     const catChartRef = useRef(null);
     const areaChartRef = useRef(null);
 
-    // --- VARIABLES DE DATOS ---
     const [projects, setProjects] = useState([]);
     const [groups, setGroups] = useState(["General", "Operaciones", "Contabilidad", "TI", "Comercial", "Tesorería"]);
     
-    // PERFIL CON IMÁGENES FIJAS LOCALES
-    const [profile, setProfile] = useState({ 
+    // PERFIL FIJO LOCAL (No editable)
+    const profile = { 
         name: "Breiner Martinez", 
         title: "Analista de Datos Jr", 
         email: "bmartinez@liquitech.co", 
         bio: "Técnico en programación para analítica de datos. Especialista en transformación digital y analítica de datos en Liquitech SAS. Egresado del SENA Centro Nacional Colombo Alemán.",
         image: "image/Creador.png",
         appIcon: "image/icon.png"
-    });
+    };
     
     const [categories, setCategories] = useState(["Macro", "Limpieza de datos", "Dashboard", "Ajuste de información", "Cruce de Bases", "Automatización"]);
 
     const [formData, setFormData] = useState({ title: '', description: '', status: 'pendiente', startDate: '', endDate: '', group: 'General', categories: [], customCategory: '' });
     const [codeData, setCodeData] = useState({ name: '', html: '' });
 
-    // --- 1. INICIALIZACIÓN MIGRADA A INDEXED-DB ---
     useEffect(() => {
         const initData = async () => {
             try {
                 let p = await localforage.getItem('breiner_repo_data');
                 if (!p && localStorage.getItem('breiner_repo_data')) p = JSON.parse(localStorage.getItem('breiner_repo_data'));
                 if (p) setProjects(p);
-
-                let prof = await localforage.getItem('breiner_profile_data');
-                if (!prof && localStorage.getItem('breiner_profile_data')) prof = JSON.parse(localStorage.getItem('breiner_profile_data'));
-                
-                // FORZAR SIEMPRE EL USO DE LAS IMÁGENES LOCALES, IGNORANDO LO GUARDADO
-                const fixedProfile = prof || profile;
-                fixedProfile.image = "image/Creador.png";
-                fixedProfile.appIcon = "image/icon.png";
-                setProfile(fixedProfile);
 
                 let g = await localforage.getItem('breiner_groups_data');
                 if (!g && localStorage.getItem('breiner_groups_data')) g = JSON.parse(localStorage.getItem('breiner_groups_data'));
@@ -111,15 +98,12 @@ const App = () => {
         initData();
     }, []);
 
-    // --- 2. GUARDADO CONTINUO EN INDEXED-DB ---
     useEffect(() => {
         if (!dataLoaded) return;
 
         const saveData = async () => {
             try {
                 await localforage.setItem('breiner_repo_data', projects);
-                // Guardamos el perfil, pero las imágenes siempre se sobrescribirán al cargar
-                await localforage.setItem('breiner_profile_data', profile);
                 await localforage.setItem('breiner_groups_data', groups);
                 await localforage.setItem('breiner_categories_data', categories);
             } catch (error) {
@@ -137,7 +121,7 @@ const App = () => {
         if (view === 'dashboard') {
             setTimeout(renderCharts, 100);
         }
-    }, [projects, profile, groups, categories, view, dataLoaded]);
+    }, [projects, groups, categories, view, dataLoaded]);
 
     const currentProject = useMemo(() => projects.find(p => p.id === selectedProjectId), [projects, selectedProjectId]);
 
@@ -151,7 +135,6 @@ const App = () => {
         return { total, completed, inProgress, pending, avgProgress, activeAreas };
     }, [projects]);
 
-    // --- Gráficos ---
     const renderCharts = () => {
         const ctxCat = document.getElementById('categoryChart');
         if (ctxCat) {
@@ -201,7 +184,6 @@ const App = () => {
         }
     };
 
-    // --- Handlers ---
     const handleSaveProject = (e) => {
         e.preventDefault();
         let finalCats = [...(formData.categories || [])];
@@ -332,7 +314,6 @@ const App = () => {
         }, 100);
     };
 
-    // --- Loading State ---
     if (!dataLoaded) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 flex-col gap-4 fade-in">
@@ -342,7 +323,6 @@ const App = () => {
         );
     }
 
-    // --- Sub-renderers ---
     const renderCalendarWidget = () => (
         <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm h-full flex flex-col text-left">
             <div className="flex justify-between items-center mb-3">
@@ -445,7 +425,6 @@ const App = () => {
                 </div>
 
                 <div ref={projectDetailRef} className="pdf-content grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 text-left">
-                    {/* Panel Izquierdo: Info y Notas */}
                     <div className="lg:col-span-2 space-y-6 md:space-y-8 text-left">
                         <div className="bg-white rounded-[2rem] p-6 md:p-10 border shadow-sm relative overflow-hidden text-left text-sharp">
                             <div className="absolute top-0 right-0 w-32 md:w-40 h-32 md:h-40 bg-violet-50/50 rounded-bl-[10rem] -mr-16 -mt-16 no-print text-left"></div>
@@ -525,7 +504,6 @@ const App = () => {
                         </div>
                     </div>
 
-                    {/* Panel Derecha: Galería y Motor */}
                     <div className="space-y-6 text-left">
                         <div className="bg-white rounded-[2rem] p-6 md:p-8 border shadow-sm text-left">
                             <div className="flex justify-between items-center mb-6 text-left">
@@ -536,7 +514,6 @@ const App = () => {
                             
                             {currentProject.files?.length > 0 ? (
                                 <div className="grid grid-cols-2 gap-3 md:gap-4 text-left">
-                                    {/* Render Multimedia */}
                                     {mediaFiles.map(media => (
                                         <div key={media.id} className="gallery-item group shadow-sm bg-slate-50 flex items-center justify-center relative rounded-xl overflow-hidden aspect-square border border-slate-100">
                                             {media.type.startsWith('video/') ? (
@@ -553,7 +530,6 @@ const App = () => {
                                             )}
                                         </div>
                                     ))}
-                                    {/* Render Documentos */}
                                     {docs.map(doc => (
                                         <div key={doc.id} className="flex flex-col items-center justify-center p-2 md:p-4 bg-slate-50 text-center group rounded-xl border border-slate-100 relative aspect-square">
                                             <LucideIcon name="file-text" size={24} className="text-slate-300 mb-1 md:mb-2"/>
@@ -634,7 +610,7 @@ const App = () => {
     const renderConfigPanel = () => (
         <div className="max-w-6xl mx-auto space-y-8 md:space-y-12 py-4 md:py-6 fade-in text-left text-sharp">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b pb-6 md:pb-10 border-slate-100 text-sharp text-left gap-4">
-                <div><h2 className="text-3xl md:text-4xl font-black text-slate-900">Configuración</h2><p className="text-slate-400 text-sm md:text-lg italic mt-1">Panel administrativo de identidad y datos.</p></div>
+                <div><h2 className="text-3xl md:text-4xl font-black text-slate-900">Configuración</h2><p className="text-slate-400 text-sm md:text-lg italic mt-1">Panel administrativo de datos.</p></div>
                 <div className="flex flex-wrap gap-2 md:gap-4 w-full sm:w-auto">
                     <button onClick={exportData} className="flex-1 sm:flex-none px-4 md:px-8 py-3 md:py-4 bg-slate-900 text-white rounded-xl md:rounded-2xl font-bold text-[9px] md:text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 md:gap-3 hover:bg-violet-700 shadow-xl transition-all shadow-sm"><LucideIcon name="download" size={14}/> Extraer JSON</button>
                     <label className="flex-1 sm:flex-none px-4 md:px-8 py-3 md:py-4 bg-white border border-slate-200 text-slate-600 rounded-xl md:rounded-2xl font-bold text-[9px] md:text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 md:gap-3 hover:bg-slate-50 transition-all shadow-sm cursor-pointer shadow-sm">
@@ -643,38 +619,8 @@ const App = () => {
                     </label>
                 </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10 text-left text-sharp">
-                <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border shadow-sm space-y-6 md:space-y-8 text-left">
-                    <div className="flex justify-between items-center text-sharp text-left">
-                        <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest flex items-center gap-2 md:gap-3 text-sharp text-left"><LucideIcon name="user" className="text-violet-500"/> Identidad Visual</h3>
-                    </div>
-                    
-                    <div className="space-y-4 md:space-y-6 text-left fade-in">
-                        <div className="flex items-center gap-4 md:gap-6 p-4 md:p-5 bg-slate-50 rounded-2xl md:rounded-3xl border border-slate-100 text-left">
-                            <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-xl md:rounded-2xl shadow-sm overflow-hidden flex items-center justify-center text-left">
-                                <img src={profile.image} className="w-full h-full object-cover" alt="Creador" />
-                            </div>
-                            <div className="text-left">
-                                <p className="text-[9px] md:text-[10px] font-bold text-slate-800 uppercase tracking-widest">Foto del Creador</p>
-                                <p className="text-[7px] md:text-[8px] text-slate-400 uppercase mt-1">image/Creador.png</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4 md:gap-6 p-4 md:p-5 bg-slate-50 rounded-2xl md:rounded-3xl border border-slate-100 text-left">
-                            <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-xl md:rounded-2xl shadow-sm overflow-hidden flex items-center justify-center text-left">
-                                <img src={profile.appIcon} className="w-full h-full object-cover" alt="Icono App" />
-                            </div>
-                            <div className="text-left">
-                                <p className="text-[9px] md:text-[10px] font-bold text-slate-800 uppercase tracking-widest">Icono de la App</p>
-                                <p className="text-[7px] md:text-[8px] text-slate-400 uppercase mt-1">image/icon.png</p>
-                            </div>
-                        </div>
-                        <div className="pt-2 md:pt-4 text-left text-sharp">
-                            <label className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase mb-2 md:mb-3 block tracking-widest text-left text-sharp">Biografía Estratégica (Bio)</label>
-                            <textarea value={profile.bio} onChange={(e) => setProfile({...profile, bio: e.target.value})} className="w-full p-4 md:p-5 bg-slate-50 border-none rounded-xl md:rounded-2xl text-xs md:text-sm font-medium outline-none focus:ring-4 focus:ring-violet-50 text-sharp" rows="5"></textarea>
-                        </div>
-                    </div>
-                </div>
-
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 text-left text-sharp">
                 <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border shadow-sm text-left text-sharp text-sharp">
                     <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest flex items-center gap-2 md:gap-3 mb-6 md:mb-8 text-slate-800"><LucideIcon name="folder-git-2" className="text-violet-500"/> Áreas Operativas</h3>
                     <div className="space-y-2 md:space-y-3 max-h-[300px] md:max-h-[400px] overflow-y-auto pr-2 custom-scrollbar text-sharp">
@@ -726,7 +672,7 @@ const App = () => {
                 <button onClick={() => {setEditId(null); setFormData({title: '', description: '', status: 'pendiente', startDate: '', endDate: '', group: 'General', categories: []}); setIsModalOpen(true);}} className="bg-slate-900 text-white px-3 py-2 md:px-6 md:py-2.5 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-bold uppercase tracking-widest hover:bg-violet-700 shadow-xl active:scale-95 transition-all text-left text-sharp whitespace-nowrap">Nuevo Proyecto</button>
             </nav>
 
-            <main className="app-container py-6 md:py-10 flex-1 text-left text-sharp">
+            <main className="app-container py-6 md:py-10 flex-1 text-left text-sharp pb-24 md:pb-10">
                 {view === 'dashboard' && (
                     <div className="space-y-6 md:space-y-10 fade-in text-left text-sharp">
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch text-left">
@@ -786,7 +732,7 @@ const App = () => {
             </main>
 
             {/* MENÚ DE NAVEGACIÓN INFERIOR (Solo visible en móviles) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-100 flex justify-around items-center p-2 z-50 pb-safe shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-100 flex justify-around items-center p-3 z-50 pb-safe shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
                 <button onClick={() => {setView('dashboard');}} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${view === 'dashboard' ? 'text-violet-600 bg-violet-50' : 'text-slate-400'}`}>
                     <LucideIcon name="layout-dashboard" size={20} />
                     <span className="text-[8px] font-bold uppercase tracking-widest">Inicio</span>
@@ -846,7 +792,7 @@ const App = () => {
                         <form onSubmit={handleAddCode} className="p-6 md:p-10 space-y-6 md:space-y-10 text-left text-sharp text-sharp text-sharp">
                             <div className="space-y-3 md:space-y-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp"><label className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 italic leading-none text-left text-sharp text-sharp">Nombre de la herramienta</label><input required value={codeData.name} onChange={e => setCodeData({...codeData, name: e.target.value})} type="text" className="w-full px-5 md:px-8 py-4 md:py-6 rounded-xl md:rounded-3xl bg-slate-50 border-none outline-none font-bold text-slate-800 focus:ring-4 md:focus:ring-8 focus:ring-violet-500/10 text-sm md:text-lg shadow-inner text-left text-sharp" placeholder="Ej: Calculadora de Datos" /></div>
                             <div className="space-y-3 md:space-y-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><div className="flex justify-between items-center px-1 md:px-2 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><label className="text-[10px] md:text-[11px] font-bold text-violet-600 uppercase tracking-widest text-left text-sharp text-sharp text-sharp">Código fuente (HTML)</label><span className="text-[8px] md:text-[9px] text-slate-400 bg-slate-50 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold uppercase border border-slate-100 text-sharp text-sharp text-sharp text-sharp text-left">Visor Independiente</span></div><textarea required value={codeData.html} onChange={e => setCodeData({...codeData, html: e.target.value})} className="w-full px-5 md:px-8 py-5 md:py-8 rounded-[1.5rem] md:rounded-[3rem] bg-slate-900 border-none outline-none text-emerald-400 font-mono text-[10px] md:text-xs leading-loose shadow-2xl custom-scrollbar text-left text-sharp text-sharp text-sharp text-sharp" rows="8" placeholder="Pega el código HTML completo aquí..."></textarea></div>
-                            <div className="flex flex-col sm:flex-row justify-end gap-4 md:gap-6 pt-2 md:pt-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><button type="button" onClick={() => setIsCodeModalOpen(false)} className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-800 transition-all italic font-poppins text-left text-sharp py-3">Cancelar</button><button type="submit" className="bg-violet-600 text-white px-8 md:px-12 py-4 md:py-5 rounded-xl md:rounded-full font-bold text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-violet-700 shadow-xl md:shadow-2xl active:scale-95 transition-all text-left text-sharp">Guardar herramienta</button></div>
+                            <div className="flex flex-col sm:flex-row justify-end gap-4 md:gap-6 pt-2 md:pt-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><button type="button" onClick={() => setIsCodeModalOpen(false)} className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-800 transition-all italic font-poppins text-left text-sharp py-3">Cancelar</button><button type="submit" className="bg-violet-600 text-white px-8 md:px-12 py-4 md:py-5 rounded-xl md:rounded-full font-bold text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-violet-700 shadow-xl md:shadow-2xl active:scale-95 transition-all text-left text-sharp">Guardar herramienta</button></div>
                         </form>
                     </div>
                 </div>
