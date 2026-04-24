@@ -38,12 +38,8 @@ const StatCard = ({ title, value, icon, color }) => {
     );
 };
 
-const CONFIG_PASS = "Admin_05/14";
-
 const App = () => {
     const [view, setView] = useState('dashboard');
-    const [isConfigAuth, setIsConfigAuth] = useState(false);
-    const [passInput, setPassInput] = useState('');
     const [selectedProjectId, setSelectedProjectId] = useState(null);
     
     const [editId, setEditId] = useState(null);
@@ -66,6 +62,7 @@ const App = () => {
     const [projects, setProjects] = useState([]);
     const [groups, setGroups] = useState(["General", "Operaciones", "Contabilidad", "TI", "Comercial", "Tesorería"]);
     
+    // PERFIL CON IMÁGENES FIJAS LOCALES
     const [profile, setProfile] = useState({ 
         name: "Breiner Martinez", 
         title: "Analista de Datos Jr", 
@@ -90,11 +87,12 @@ const App = () => {
 
                 let prof = await localforage.getItem('breiner_profile_data');
                 if (!prof && localStorage.getItem('breiner_profile_data')) prof = JSON.parse(localStorage.getItem('breiner_profile_data'));
-                if (prof) {
-                    prof.image = "image/Creador.png";
-                    prof.appIcon = "image/icon.png";
-                    setProfile(prof);
-                }
+                
+                // FORZAR SIEMPRE EL USO DE LAS IMÁGENES LOCALES, IGNORANDO LO GUARDADO
+                const fixedProfile = prof || profile;
+                fixedProfile.image = "image/Creador.png";
+                fixedProfile.appIcon = "image/icon.png";
+                setProfile(fixedProfile);
 
                 let g = await localforage.getItem('breiner_groups_data');
                 if (!g && localStorage.getItem('breiner_groups_data')) g = JSON.parse(localStorage.getItem('breiner_groups_data'));
@@ -120,6 +118,7 @@ const App = () => {
         const saveData = async () => {
             try {
                 await localforage.setItem('breiner_repo_data', projects);
+                // Guardamos el perfil, pero las imágenes siempre se sobrescribirán al cargar
                 await localforage.setItem('breiner_profile_data', profile);
                 await localforage.setItem('breiner_groups_data', groups);
                 await localforage.setItem('breiner_categories_data', categories);
@@ -323,24 +322,6 @@ const App = () => {
         } catch(e) {
             alert("Error al ejecutar el código HTML.");
         }
-    };
-
-    const checkConfigAccess = (e) => {
-        e.preventDefault();
-        if(passInput === CONFIG_PASS) {
-            setIsConfigAuth(true);
-            setPassInput('');
-        } else {
-            alert("Contraseña Incorrecta");
-        }
-    };
-
-    const handleImageUpload = (e, field) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onloadend = () => setProfile(prev => ({ ...prev, [field]: reader.result }));
-        reader.readAsDataURL(file);
     };
 
     const exportToPDF = (project) => {
@@ -666,44 +647,32 @@ const App = () => {
                 <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border shadow-sm space-y-6 md:space-y-8 text-left">
                     <div className="flex justify-between items-center text-sharp text-left">
                         <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest flex items-center gap-2 md:gap-3 text-sharp text-left"><LucideIcon name="user" className="text-violet-500"/> Identidad Visual</h3>
-                        {isConfigAuth && <button onClick={() => setIsConfigAuth(false)} className="text-[8px] md:text-[9px] font-bold uppercase text-slate-400 hover:text-red-500 transition-colors" title="Bloquear edición"><LucideIcon name="lock" size={12}/></button>}
                     </div>
                     
-                    {!isConfigAuth ? (
-                        <div className="space-y-6 text-center py-6">
-                            <LucideIcon name="lock" size={32} className="text-violet-600 mx-auto mb-4 opacity-50 md:w-10 md:h-10" />
-                            <p className="text-slate-400 text-[9px] md:text-[11px] font-medium mb-6 uppercase tracking-widest">Protegido</p>
-                            <form onSubmit={checkConfigAccess} className="space-y-4 text-center text-sharp">
-                                <input type="password" value={passInput} onChange={e => setPassInput(e.target.value)} className="w-full p-3 md:p-4 bg-slate-50 rounded-xl md:rounded-2xl text-center font-bold text-xs md:text-sm outline-none focus:ring-2 focus:ring-violet-100" placeholder="••••••••" />
-                                <button type="submit" className="w-full bg-violet-600 text-white py-3 rounded-xl md:rounded-2xl font-bold uppercase tracking-widest hover:bg-violet-700 shadow-md transition-all text-[9px] md:text-[10px]">Desbloquear</button>
-                            </form>
-                        </div>
-                    ) : (
-                        <div className="space-y-4 md:space-y-6 text-left fade-in">
-                            <div className="flex items-center gap-4 md:gap-6 p-4 md:p-5 bg-slate-50 rounded-2xl md:rounded-3xl border border-slate-100 text-left">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-xl md:rounded-2xl shadow-sm overflow-hidden flex items-center justify-center text-left">
-                                    <img src={profile.image} className="w-full h-full object-cover" alt="Creador" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-[9px] md:text-[10px] font-bold text-slate-800 uppercase tracking-widest">Foto del Creador</p>
-                                    <p className="text-[7px] md:text-[8px] text-slate-400 uppercase mt-1">image/Creador.png</p>
-                                </div>
+                    <div className="space-y-4 md:space-y-6 text-left fade-in">
+                        <div className="flex items-center gap-4 md:gap-6 p-4 md:p-5 bg-slate-50 rounded-2xl md:rounded-3xl border border-slate-100 text-left">
+                            <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-xl md:rounded-2xl shadow-sm overflow-hidden flex items-center justify-center text-left">
+                                <img src={profile.image} className="w-full h-full object-cover" alt="Creador" />
                             </div>
-                            <div className="flex items-center gap-4 md:gap-6 p-4 md:p-5 bg-slate-50 rounded-2xl md:rounded-3xl border border-slate-100 text-left">
-                                <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-xl md:rounded-2xl shadow-sm overflow-hidden flex items-center justify-center text-left">
-                                    <img src={profile.appIcon} className="w-full h-full object-cover" alt="Icono App" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-[9px] md:text-[10px] font-bold text-slate-800 uppercase tracking-widest">Icono de la App</p>
-                                    <p className="text-[7px] md:text-[8px] text-slate-400 uppercase mt-1">image/icon.png</p>
-                                </div>
-                            </div>
-                            <div className="pt-2 md:pt-4 text-left text-sharp">
-                                <label className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase mb-2 md:mb-3 block tracking-widest text-left text-sharp">Biografía Estratégica (Bio)</label>
-                                <textarea value={profile.bio} onChange={(e) => setProfile({...profile, bio: e.target.value})} className="w-full p-4 md:p-5 bg-slate-50 border-none rounded-xl md:rounded-2xl text-xs md:text-sm font-medium outline-none focus:ring-4 focus:ring-violet-50 text-sharp" rows="5"></textarea>
+                            <div className="text-left">
+                                <p className="text-[9px] md:text-[10px] font-bold text-slate-800 uppercase tracking-widest">Foto del Creador</p>
+                                <p className="text-[7px] md:text-[8px] text-slate-400 uppercase mt-1">image/Creador.png</p>
                             </div>
                         </div>
-                    )}
+                        <div className="flex items-center gap-4 md:gap-6 p-4 md:p-5 bg-slate-50 rounded-2xl md:rounded-3xl border border-slate-100 text-left">
+                            <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-xl md:rounded-2xl shadow-sm overflow-hidden flex items-center justify-center text-left">
+                                <img src={profile.appIcon} className="w-full h-full object-cover" alt="Icono App" />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-[9px] md:text-[10px] font-bold text-slate-800 uppercase tracking-widest">Icono de la App</p>
+                                <p className="text-[7px] md:text-[8px] text-slate-400 uppercase mt-1">image/icon.png</p>
+                            </div>
+                        </div>
+                        <div className="pt-2 md:pt-4 text-left text-sharp">
+                            <label className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase mb-2 md:mb-3 block tracking-widest text-left text-sharp">Biografía Estratégica (Bio)</label>
+                            <textarea value={profile.bio} onChange={(e) => setProfile({...profile, bio: e.target.value})} className="w-full p-4 md:p-5 bg-slate-50 border-none rounded-xl md:rounded-2xl text-xs md:text-sm font-medium outline-none focus:ring-4 focus:ring-violet-50 text-sharp" rows="5"></textarea>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border shadow-sm text-left text-sharp text-sharp">
@@ -736,28 +705,28 @@ const App = () => {
     );
 
     return (
-        <div className="min-h-screen flex flex-col selection:bg-violet-100 selection:text-violet-800 text-left">
-            <nav className="bg-white border-b border-slate-100 sticky top-0 z-50 px-4 md:px-8 h-16 md:h-16 flex items-center justify-between shadow-sm text-left">
-                <div className="flex items-center gap-10 text-left">
-                    <div className="flex items-center gap-2 md:gap-3 cursor-pointer text-left" onClick={() => {setView('dashboard'); setSelectedProjectId(null); setIsConfigAuth(false); setPassInput('');}}>
-                        <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center text-white shadow-xl overflow-hidden shrink-0">
+        <div className="min-h-screen flex flex-col selection:bg-violet-100 selection:text-violet-800 text-left pb-16 md:pb-0">
+            <nav className="bg-white border-b border-slate-100 sticky top-0 z-50 px-4 md:px-8 h-14 md:h-16 flex items-center justify-between shadow-sm text-left">
+                <div className="flex items-center gap-3 md:gap-10 text-left">
+                    <div className="flex items-center gap-2 md:gap-3 cursor-pointer text-left" onClick={() => {setView('dashboard'); setSelectedProjectId(null);}}>
+                        <div className="w-7 h-7 md:w-8 md:h-8 bg-violet-600 rounded-lg flex items-center justify-center text-white shadow-xl overflow-hidden shrink-0">
                             <img src={profile.appIcon} className="w-full h-full object-cover" alt="Logo"/>
                         </div>
-                        <span className="text-base md:text-lg font-bold text-left tracking-tight">Liquitech / <span className="text-violet-600 text-left">Repo</span></span>
+                        <span className="text-sm md:text-lg font-bold text-left tracking-tight truncate">Liquitech / <span className="text-violet-600 text-left">Repo</span></span>
                     </div>
                     
                     {/* MENÚ DE ESCRITORIO (Oculto en móviles) */}
                     <div className="hidden md:flex gap-8 text-[11px] font-bold text-slate-400 uppercase tracking-[2px] text-left">
-                        <button onClick={() => {setView('dashboard'); setIsConfigAuth(false);}} className={view === 'dashboard' ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Dashboard</button>
-                        <button onClick={() => {setView('projects'); setIsConfigAuth(false);}} className={(view === 'projects' || view === 'project-detail') ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Proyectos</button>
-                        <button onClick={() => {setView('profile'); setIsConfigAuth(false);}} className={view === 'profile' ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Creador</button>
+                        <button onClick={() => {setView('dashboard');}} className={view === 'dashboard' ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Dashboard</button>
+                        <button onClick={() => {setView('projects');}} className={(view === 'projects' || view === 'project-detail') ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Proyectos</button>
+                        <button onClick={() => {setView('profile');}} className={view === 'profile' ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Creador</button>
                         <button onClick={() => setView('config')} className={view === 'config' ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Configuración</button>
                     </div>
                 </div>
-                <button onClick={() => {setEditId(null); setFormData({title: '', description: '', status: 'pendiente', startDate: '', endDate: '', group: 'General', categories: []}); setIsModalOpen(true);}} className="bg-slate-900 text-white px-4 py-2 md:px-6 md:py-2.5 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-bold uppercase tracking-widest hover:bg-violet-700 shadow-xl active:scale-95 transition-all text-left text-sharp">Nuevo Proyecto</button>
+                <button onClick={() => {setEditId(null); setFormData({title: '', description: '', status: 'pendiente', startDate: '', endDate: '', group: 'General', categories: []}); setIsModalOpen(true);}} className="bg-slate-900 text-white px-3 py-2 md:px-6 md:py-2.5 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-bold uppercase tracking-widest hover:bg-violet-700 shadow-xl active:scale-95 transition-all text-left text-sharp whitespace-nowrap">Nuevo Proyecto</button>
             </nav>
 
-            <main className="app-container py-6 md:py-10 flex-1 text-left text-sharp pb-24 md:pb-10">
+            <main className="app-container py-6 md:py-10 flex-1 text-left text-sharp">
                 {view === 'dashboard' && (
                     <div className="space-y-6 md:space-y-10 fade-in text-left text-sharp">
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch text-left">
@@ -817,16 +786,16 @@ const App = () => {
             </main>
 
             {/* MENÚ DE NAVEGACIÓN INFERIOR (Solo visible en móviles) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-100 flex justify-around items-center p-3 z-50 pb-safe shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
-                <button onClick={() => {setView('dashboard'); setIsConfigAuth(false);}} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${view === 'dashboard' ? 'text-violet-600 bg-violet-50' : 'text-slate-400'}`}>
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-100 flex justify-around items-center p-2 z-50 pb-safe shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+                <button onClick={() => {setView('dashboard');}} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${view === 'dashboard' ? 'text-violet-600 bg-violet-50' : 'text-slate-400'}`}>
                     <LucideIcon name="layout-dashboard" size={20} />
                     <span className="text-[8px] font-bold uppercase tracking-widest">Inicio</span>
                 </button>
-                <button onClick={() => {setView('projects'); setIsConfigAuth(false);}} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${view === 'projects' || view === 'project-detail' ? 'text-violet-600 bg-violet-50' : 'text-slate-400'}`}>
+                <button onClick={() => {setView('projects');}} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${view === 'projects' || view === 'project-detail' ? 'text-violet-600 bg-violet-50' : 'text-slate-400'}`}>
                     <LucideIcon name="folder-git-2" size={20} />
                     <span className="text-[8px] font-bold uppercase tracking-widest">Proyectos</span>
                 </button>
-                <button onClick={() => {setView('profile'); setIsConfigAuth(false);}} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${view === 'profile' ? 'text-violet-600 bg-violet-50' : 'text-slate-400'}`}>
+                <button onClick={() => {setView('profile');}} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${view === 'profile' ? 'text-violet-600 bg-violet-50' : 'text-slate-400'}`}>
                     <LucideIcon name="user" size={20} />
                     <span className="text-[8px] font-bold uppercase tracking-widest">Creador</span>
                 </button>
@@ -877,7 +846,7 @@ const App = () => {
                         <form onSubmit={handleAddCode} className="p-6 md:p-10 space-y-6 md:space-y-10 text-left text-sharp text-sharp text-sharp">
                             <div className="space-y-3 md:space-y-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp"><label className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 italic leading-none text-left text-sharp text-sharp">Nombre de la herramienta</label><input required value={codeData.name} onChange={e => setCodeData({...codeData, name: e.target.value})} type="text" className="w-full px-5 md:px-8 py-4 md:py-6 rounded-xl md:rounded-3xl bg-slate-50 border-none outline-none font-bold text-slate-800 focus:ring-4 md:focus:ring-8 focus:ring-violet-500/10 text-sm md:text-lg shadow-inner text-left text-sharp" placeholder="Ej: Calculadora de Datos" /></div>
                             <div className="space-y-3 md:space-y-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><div className="flex justify-between items-center px-1 md:px-2 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><label className="text-[10px] md:text-[11px] font-bold text-violet-600 uppercase tracking-widest text-left text-sharp text-sharp text-sharp">Código fuente (HTML)</label><span className="text-[8px] md:text-[9px] text-slate-400 bg-slate-50 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold uppercase border border-slate-100 text-sharp text-sharp text-sharp text-sharp text-left">Visor Independiente</span></div><textarea required value={codeData.html} onChange={e => setCodeData({...codeData, html: e.target.value})} className="w-full px-5 md:px-8 py-5 md:py-8 rounded-[1.5rem] md:rounded-[3rem] bg-slate-900 border-none outline-none text-emerald-400 font-mono text-[10px] md:text-xs leading-loose shadow-2xl custom-scrollbar text-left text-sharp text-sharp text-sharp text-sharp" rows="8" placeholder="Pega el código HTML completo aquí..."></textarea></div>
-                            <div className="flex flex-col sm:flex-row justify-end gap-4 md:gap-6 pt-2 md:pt-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><button type="button" onClick={() => setIsCodeModalOpen(false)} className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-800 transition-all italic font-poppins text-left text-sharp py-3">Cancelar</button><button type="submit" className="bg-violet-600 text-white px-8 md:px-12 py-4 md:py-5 rounded-xl md:rounded-full font-bold text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-violet-700 shadow-xl md:shadow-2xl active:scale-95 transition-all text-left text-sharp">Guardar herramienta</button></div>
+                            <div className="flex flex-col sm:flex-row justify-end gap-4 md:gap-6 pt-2 md:pt-4 text-left text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp text-sharp"><button type="button" onClick={() => setIsCodeModalOpen(false)} className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-800 transition-all italic font-poppins text-left text-sharp py-3">Cancelar</button><button type="submit" className="bg-violet-600 text-white px-8 md:px-12 py-4 md:py-5 rounded-xl md:rounded-full font-bold text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-violet-700 shadow-xl md:shadow-2xl active:scale-95 transition-all text-left text-sharp">Guardar herramienta</button></div>
                         </form>
                     </div>
                 </div>
