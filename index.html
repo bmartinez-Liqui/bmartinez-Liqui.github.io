@@ -19,7 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- NUEVO MOTOR DE BASE DE DATOS DE ALTA CAPACIDAD (IndexedDB) -->
+    <!-- Motor de Base de Datos de Alta Capacidad (IndexedDB) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 
     <style>
@@ -142,6 +142,8 @@
         .exporting-pdf .no-print { display: none !important; }
         .exporting-pdf .pdf-content { padding: 25px; background: white; }
         
+        .small-cal-dot { width: 4px; height: 4px; border-radius: 50%; display: inline-block; margin: 1px; }
+
         .p-color-0 { background: rgba(124, 58, 237, 0.15); color: #6d28d9; border-left: 2px solid #7c3aed; }
         .p-color-1 { background: rgba(16, 185, 129, 0.15); color: #065f46; border-left: 2px solid #10b981; }
         .p-color-2 { background: rgba(245, 158, 11, 0.15); color: #92400e; border-left: 2px solid #f59e0b; }
@@ -198,12 +200,13 @@
         const CONFIG_PASS = "Admin_05/14";
 
         const App = () => {
-            // --- ESTADOS GLOBALES ---
             const [view, setView] = useState('dashboard');
             const [isConfigAuth, setIsConfigAuth] = useState(false);
             const [passInput, setPassInput] = useState('');
             const [selectedProjectId, setSelectedProjectId] = useState(null);
+            
             const [editId, setEditId] = useState(null);
+            
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
             const [isGanttOpen, setIsGanttOpen] = useState(false);
@@ -211,7 +214,7 @@
             const [currentDate, setCurrentDate] = useState(new Date());
             const [editingNoteId, setEditingNoteId] = useState(null);
             const [viewingMedia, setViewingMedia] = useState(null);
-            const [dataLoaded, setDataLoaded] = useState(false); // ESTADO DE CARGA BD
+            const [dataLoaded, setDataLoaded] = useState(false);
 
             const fileInputRef = useRef(null);
             const projectDetailRef = useRef(null);
@@ -234,26 +237,22 @@
             const [formData, setFormData] = useState({ title: '', description: '', status: 'pendiente', startDate: '', endDate: '', group: 'General', categories: [], customCategory: '' });
             const [codeData, setCodeData] = useState({ name: '', html: '' });
 
-            // --- 1. INICIALIZACIÓN MIGRADA A INDEXED-DB (localForage) ---
+            // --- 1. INICIALIZACIÓN MIGRADA A INDEXED-DB ---
             useEffect(() => {
                 const initData = async () => {
                     try {
-                        // Carga o migración de Proyectos
                         let p = await localforage.getItem('breiner_repo_data');
                         if (!p && localStorage.getItem('breiner_repo_data')) p = JSON.parse(localStorage.getItem('breiner_repo_data'));
                         if (p) setProjects(p);
 
-                        // Carga o migración de Perfil
                         let prof = await localforage.getItem('breiner_profile_data');
                         if (!prof && localStorage.getItem('breiner_profile_data')) prof = JSON.parse(localStorage.getItem('breiner_profile_data'));
                         if (prof) setProfile(prof);
 
-                        // Carga o migración de Áreas
                         let g = await localforage.getItem('breiner_groups_data');
                         if (!g && localStorage.getItem('breiner_groups_data')) g = JSON.parse(localStorage.getItem('breiner_groups_data'));
                         if (g) setGroups(g);
 
-                        // Carga o migración de Categorías
                         let c = await localforage.getItem('breiner_categories_data');
                         if (!c && localStorage.getItem('breiner_categories_data')) c = JSON.parse(localStorage.getItem('breiner_categories_data'));
                         if (c) setCategories(c);
@@ -293,7 +292,6 @@
                     setTimeout(renderCharts, 100);
                 }
             }, [projects, profile, groups, categories, view, dataLoaded]);
-
 
             const currentProject = useMemo(() => projects.find(p => p.id === selectedProjectId), [projects, selectedProjectId]);
 
@@ -357,7 +355,7 @@
                 }
             };
 
-            // --- Handlers de Proyectos ---
+            // --- Handlers ---
             const handleSaveProject = (e) => {
                 e.preventDefault();
                 let finalCats = [...(formData.categories || [])];
@@ -425,10 +423,9 @@
                 reader.readAsText(file);
             };
 
-            // LÍMITE DE TAMAÑO AMPLIFICADO A 25MB (Gracias a IndexedDB)
             const handleFileUpload = (e) => {
                 const files = Array.from(e.target.files);
-                const MAX_SIZE = 25 * 1024 * 1024; // 25MB Límite 
+                const MAX_SIZE = 25 * 1024 * 1024; // 25MB Límite ampliado
                 
                 files.forEach(file => {
                     if (file.size > MAX_SIZE) {
@@ -551,7 +548,14 @@
                     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
                         <div className="bg-white rounded-3xl w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl overflow-hidden text-left">
                             <div className="p-5 border-b flex justify-between items-center bg-white">
-                                <h2 className="text-lg font-bold text-slate-800">Calendario Mensual</h2>
+                                <div className="flex items-center gap-4">
+                                    <h2 className="text-lg font-bold text-slate-800">Calendario Mensual</h2>
+                                    <div className="flex gap-2 bg-slate-100 p-1 rounded-xl">
+                                        <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="p-1 hover:bg-white rounded-lg transition-colors"><LucideIcon name="chevron-left" /></button>
+                                        <span className="font-bold min-w-[110px] text-center text-xs capitalize">{currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}</span>
+                                        <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="p-1 hover:bg-white rounded-lg transition-colors"><LucideIcon name="chevron-right" /></button>
+                                    </div>
+                                </div>
                                 <button onClick={() => setIsGanttOpen(false)} className="p-2 hover:bg-slate-100 rounded-full"><LucideIcon name="x" /></button>
                             </div>
                             <div className="flex-1 overflow-auto p-5 bg-slate-50">
@@ -659,14 +663,14 @@
                                 </div>
 
                                 <div className="bg-white rounded-[2rem] p-8 border shadow-sm text-left">
-                                    <h3 className="text-lg font-bold mb-6 flex items-center gap-3 text-slate-800"><LucideIcon name="edit-3" className="text-violet-500"/> Notas de Avance</h3>
-                                    <div className="flex gap-2 mb-8 no-print text-left">
-                                        <input id="noteInp" className="flex-1 bg-slate-50 p-3 rounded-xl border-none outline-none font-medium text-sm text-left shadow-inner" placeholder="Registrar avance operativo..." />
-                                        <button onClick={() => { const inp = document.getElementById('noteInp'); addNote(currentProject.id, inp.value); inp.value = ''; }} className="bg-slate-900 text-white px-6 rounded-xl font-bold text-[10px] uppercase hover:bg-violet-600 transition-all text-sharp">Publicar</button>
+                                    <h3 className="text-xl font-bold mb-8 flex items-center gap-3 text-slate-800"><LucideIcon name="edit-3" className="text-violet-500"/> Notas de Avance</h3>
+                                    <div className="flex gap-3 mb-10 no-print text-left">
+                                        <input id="noteInp" className="flex-1 bg-slate-50 p-4 rounded-2xl border-none outline-none font-medium text-sm text-left shadow-inner" placeholder="Registrar avance operativo..." />
+                                        <button onClick={() => { const inp = document.getElementById('noteInp'); addNote(currentProject.id, inp.value); inp.value = ''; }} className="bg-slate-900 text-white px-8 rounded-2xl font-bold text-[10px] uppercase hover:bg-violet-600 transition-all text-sharp">Publicar</button>
                                     </div>
-                                    <div className="space-y-4 text-left">
+                                    <div className="space-y-6">
                                         {(currentProject.notes || []).map(n => (
-                                            <div key={n.id} className="p-5 bg-slate-50 rounded-2xl border-l-4 border-violet-400 group flex justify-between items-start text-left">
+                                            <div key={n.id} className="p-6 bg-slate-50 rounded-2xl border-l-4 border-violet-400 group flex justify-between items-start text-left text-sharp">
                                                 <div className="flex-1 text-left">
                                                     {editingNoteId === n.id ? (
                                                         <div className="flex gap-2 text-left text-sharp"><input id={`edit-note-${n.id}`} defaultValue={n.text} className="flex-1 p-2 bg-white rounded border outline-none text-sm font-medium text-left shadow-sm" /><button onClick={() => { const v = document.getElementById(`edit-note-${n.id}`).value; setProjects(prev => prev.map(p => p.id === currentProject.id ? {...p, notes: p.notes.map(x => x.id === n.id ? {...x, text: v} : x)} : p)); setEditingNoteId(null); }} className="p-2 bg-emerald-500 text-white rounded shadow-sm text-left"><LucideIcon name="check" size={14}/></button></div>
@@ -689,7 +693,7 @@
                                 </div>
                             </div>
 
-                            {/* Columna Derecha: Galería y Motor */}
+                            {/* Panel Derecho: Galería y Motor */}
                             <div className="space-y-6 text-left">
                                 <div className="bg-white rounded-[2rem] p-8 border shadow-sm text-left">
                                     <div className="flex justify-between items-center mb-6 text-left">
@@ -862,10 +866,10 @@
                                 <span className="text-lg font-bold text-left tracking-tight">Liquitech / <span className="text-violet-600 text-left">Repo</span></span>
                             </div>
                             <div className="hidden lg:flex gap-8 text-[11px] font-bold text-slate-400 uppercase tracking-[2px] text-left">
-                                <button onClick={() => {setView('dashboard'); setIsConfigAuth(false);}} className={view === 'dashboard' ? 'text-violet-600' : 'hover:text-slate-600 transition-colors'}>Dashboard</button>
-                                <button onClick={() => {setView('projects'); setIsConfigAuth(false);}} className={(view === 'projects' || view === 'project-detail') ? 'text-violet-600' : 'hover:text-slate-600 transition-colors'}>Proyectos</button>
-                                <button onClick={() => {setView('profile'); setIsConfigAuth(false);}} className={view === 'profile' ? 'text-violet-600' : 'hover:text-slate-600 transition-colors'}>Creador</button>
-                                <button onClick={() => setView('config')} className={view === 'config' ? 'text-violet-600' : 'hover:text-slate-600 transition-colors'}>Configuración</button>
+                                <button onClick={() => {setView('dashboard'); setIsConfigAuth(false);}} className={view === 'dashboard' ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Dashboard</button>
+                                <button onClick={() => {setView('projects'); setIsConfigAuth(false);}} className={(view === 'projects' || view === 'project-detail') ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Proyectos</button>
+                                <button onClick={() => {setView('profile'); setIsConfigAuth(false);}} className={view === 'profile' ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Creador</button>
+                                <button onClick={() => setView('config')} className={view === 'config' ? 'text-violet-600 border-b-2 border-violet-600 py-5' : 'py-5 hover:text-slate-600 transition-colors'}>Configuración</button>
                             </div>
                         </div>
                         <button onClick={() => {setEditId(null); setFormData({title: '', description: '', status: 'pendiente', startDate: '', endDate: '', group: 'General', categories: []}); setIsModalOpen(true);}} className="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-violet-700 shadow-xl active:scale-95 transition-all text-left text-sharp">Nuevo Proyecto</button>
